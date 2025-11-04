@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Générateur de QR JSON – Mémento RCH</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <main class="container" style="grid-template-columns:1fr;">
+    <section class="info-block">
+      <h2>Créer un QR code JSON (pastille Titre – Version)</h2>
+      <textarea id="jsonInput" class="prompt" placeholder='Collez le JSON du QR...'></textarea>
+      <div class="action-row">
+        <button id="genBtn" class="btn">Générer</button>
+        <button id="dlBtn" class="btn ghost">Télécharger PNG</button>
+      </div>
+      <div id="qrWrap" style="position:relative;width:320px;height:320px;margin-top:16px;"></div>
+    </section>
+  </main>
+<script>
+const wrap = document.getElementById('qrWrap'); let qr;
+function drawBadge(txt){
+  const canvas = wrap.querySelector('canvas'); if(!canvas) return;
+  const ctx = canvas.getContext('2d'); const cx=canvas.width/2, cy=canvas.height/2; const r=Math.min(canvas.width, canvas.height)*0.16;
+  ctx.fillStyle='#1B2BA0'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font=`bold ${Math.round(r*0.45)}px Inter, Arial`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(txt, cx, cy);
+}
+document.getElementById('genBtn').addEventListener('click', ()=>{
+  const raw = document.getElementById('jsonInput').value.trim(); let obj;
+  try{ obj = JSON.parse(raw); }catch(e){ alert('JSON invalide'); return; }
+  const b64 = btoa(JSON.stringify(obj)); const payload = 'data:application/json;base64,' + b64;
+  wrap.innerHTML=''; qr = new QRCode(wrap, { text: payload, width: 320, height: 320, correctLevel: QRCode.CorrectLevel.H });
+  setTimeout(()=> drawBadge(`${(obj.titre_fiche||'').slice(0,1)}-${obj.version||''}`), 100);
+});
+document.getElementById('dlBtn').addEventListener('click', ()=>{
+  const canvas = wrap.querySelector('canvas'); if(!canvas) return alert('Générez d\'abord un QR');
+  const url = canvas.toDataURL('image/png'); const a=document.createElement('a'); a.href=url; a.download='qr-memento-rch.png'; a.click();
+});
+</script>
+</body>
+</html>
